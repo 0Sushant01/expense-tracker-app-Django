@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  /* Center the header with subtle fade-in */
+  .welcome-section {
+    animation: fadeInDown 1s ease forwards;
+    opacity: 0;
+  }
+
+  @keyframes fadeInDown {
+    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(-20px); }
+  }
+
+  /* Buttons with smooth hover and shadow */
+  .btn-outline-primary,
+  .btn-outline-success,
+  .btn-outline-warning,
+  .btn-outline-danger {
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+  .btn-outline-primary:hover {
+    background-color: #4e79a7;
+    color: white;
+    box-shadow: 0 4px 12px rgba(78,121,167,0.5);
+  }
+  .btn-outline-success:hover {
+    background-color: #3a9d3a;
+    color: white;
+    box-shadow: 0 4px 12px rgba(58,157,58,0.5);
+  }
+  .btn-outline-warning:hover {
+    background-color: #f2b90b;
+    color: #222;
+    box-shadow: 0 4px 12px rgba(242,185,11,0.5);
+  }
+  .btn-outline-danger:hover {
+    background-color: #d93434;
+    color: white;
+    box-shadow: 0 4px 12px rgba(217,52,52,0.6);
+  }
+
+  /* Responsive spacing between buttons on small screens */
+  @media (max-width: 576px) {
+    .row.mb-4 > div {
+      margin-bottom: 15px;
+    }
+  }
+
+  /* Card style for chart container */
+  .chart-container {
+    background: #f8f9fa;
+    border-radius: 15px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    padding: 30px 20px;
+    max-width: 450px;
+    margin: 0 auto;
+  }
+
+  /* Chart title with gradient underline */
+  h4.text-center.mb-3 {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 8px;
+  }
+  h4.text-center.mb-3::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, #4e79a7, #f28e2b);
+    border-radius: 4px;
+  }
+</style>
+
+<div class="welcome-section text-center mb-5">
+    <h2>Welcome to <strong>Rumi Press Book Tracker</strong> 📚</h2>
+    <p class="lead">Track book inventory and distribution expenses by category.</p>
+</div>
+
+<div class="row mb-4 text-center">
+    <div class="col-md-3"><a href="{% url 'category_list' %}" class="btn btn-outline-primary w-100 shadow-sm">📁 Categories</a></div>
+    <div class="col-md-3"><a href="{% url 'book_list' %}" class="btn btn-outline-success w-100 shadow-sm">📚 Books</a></div>
+    <div class="col-md-3"><a href="{% url 'import_data' %}" class="btn btn-outline-warning w-100 shadow-sm">📅 Import Data</a></div>
+    <div class="col-md-3"><a href="{% url 'report' %}" class="btn btn-outline-danger w-100 shadow-sm">📊 View Report</a></div>
+</div>
+
+<hr>
+
+<div class="mb-5">
+    <h4 class="text-center mb-3">Distribution Expenses by Category</h4>
+    <div class="chart-container">
+        <canvas id="expensesChart"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    fetch("{% url 'home_chart_data' %}")
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('expensesChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Expenses',
+                        data: data.data,
+                        backgroundColor: [
+                            '#4e79a7', '#f28e2b', '#e15759', '#76b7b2', '#59a14f',
+                            '#edc949', '#af7aa1', '#ff9da7', '#9c755f', '#bab0ab'
+                        ],
+                        borderColor: '#fff',
+                        borderWidth: 2,
+                        hoverOffset: 30,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    animation: {
+                        animateRotate: true,
+                        duration: 1500,
+                        easing: 'easeOutBounce'
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { size: 14, weight: 'bold' },
+                                padding: 20,
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': $' + context.parsed.toFixed(2);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+</script>
+{% endblock %}

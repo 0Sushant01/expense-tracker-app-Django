@@ -1,15 +1,210 @@
 {% extends 'base.html' %}
+
 {% block content %}
-<h3>Distribution Expenses by Category</h3>
-<table class="table table-striped">
-  <tr><th>Category</th><th>Total Expenses</th></tr>
-  {% for row in report %}
-  <tr>
-    <td>{{ row.category__name }}</td>
-    <td>${{ row.total }}</td>
-  </tr>
-  {% endfor %}
-</table>
-<a href="{% url 'report_csv' %}" class="btn btn-outline-primary">Download CSV</a>
-<a href="{% url 'report_pdf' %}" class="btn btn-outline-danger">Download PDF</a>
+<style>
+  /* Gradient background for chart card */
+  .chart-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(118, 75, 162, 0.4);
+    padding: 20px;
+  }
+
+  /* Vibrant colors for bars - fallback if JS colors not supported */
+  .chart-bar-0 { background-color: #4caf50; }
+  .chart-bar-1 { background-color: #2196f3; }
+  .chart-bar-2 { background-color: #ff9800; }
+  .chart-bar-3 { background-color: #f44336; }
+  .chart-bar-4 { background-color: #9c27b0; }
+  .chart-bar-5 { background-color: #00bcd4; }
+
+  /* Table row hover highlight */
+  tbody tr:hover {
+    background-color: #f0f8ff;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  /* Buttons: filled primary and danger */
+  .btn-filled-primary {
+    background-color: #667eea;
+    color: white;
+    border: none;
+  }
+  .btn-filled-primary:hover {
+    background-color: #5a67d8;
+    color: white;
+  }
+  .btn-filled-danger {
+    background-color: #e53e3e;
+    color: white;
+    border: none;
+  }
+  .btn-filled-danger:hover {
+    background-color: #c53030;
+    color: white;
+  }
+
+  /* Header underline accent */
+  h3.section-title {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 8px;
+    margin-bottom: 24px;
+  }
+  h3.section-title::after {
+    content: "";
+    position: absolute;
+    width: 60px;
+    height: 3px;
+    background: #764ba2;
+    bottom: 0;
+    left: 0;
+    border-radius: 3px;
+  }
+</style>
+
+<div class="container my-5">
+  <h3 class="section-title">Distribution Expenses by Category</h3>
+
+  <div class="row gy-4">
+    <!-- Table Section -->
+    <div class="col-lg-6">
+      <table class="table table-hover table-bordered shadow-sm rounded">
+        <thead class="table-primary">
+          <tr>
+            <th>Category</th>
+            <th>Total Expenses</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in report %}
+          <tr>
+            <td>{{ row.category__name }}</td>
+            <td><strong>${{ row.total|floatformat:2 }}</strong></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="mt-3">
+        <a href="{% url 'report_csv' %}" class="btn btn-filled-primary me-2 shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" style="width:18px; height:18px; vertical-align:middle; margin-right:6px;" fill="currentColor" class="bi bi-file-earmark-spreadsheet" viewBox="0 0 16 16">
+            <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM10.5 3a.5.5 0 0 0 .5-.5V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5H10.5A1.5 1.5 0 0 1 9 3.5V3h1.5z"/>
+            <path d="M9.5 12a.5.5 0 0 1-.5-.5V10H7.5a.5.5 0 0 1 0-1H9v-1H7.5a.5.5 0 0 1 0-1H9v-1H7.5a.5.5 0 0 1 0-1H9v-1a.5.5 0 0 1 1 0v9a.5.5 0 0 1-.5.5z"/>
+          </svg>
+          Download CSV
+        </a>
+        <a href="{% url 'report_pdf' %}" class="btn btn-filled-danger shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" style="width:18px; height:18px; vertical-align:middle; margin-right:6px;" fill="currentColor" class="bi bi-file-earmark-pdf" viewBox="0 0 16 16">
+            <path d="M5.5 11a.5.5 0 0 1 0-1H6v-.5a.5.5 0 0 1 1 0V10h.5a.5.5 0 0 1 0 1H7v.5a.5.5 0 0 1-1 0V11H5.5z"/>
+            <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM10.5 3a.5.5 0 0 0 .5-.5V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5H10.5A1.5 1.5 0 0 1 9 3.5V3h1.5z"/>
+          </svg>
+          Download PDF
+        </a>
+      </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div class="col-lg-6">
+      <div class="chart-card">
+        <h5 class="mb-4 text-center">Expenses Chart</h5>
+        <canvas id="expensesChart" style="max-height: 400px;"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('expensesChart').getContext('2d');
+
+  // Dynamic colors array for bars
+  const barColors = [
+    '#4caf50', '#2196f3', '#ff9800', '#f44336', '#9c27b0', '#00bcd4',
+    '#e91e63', '#3f51b5', '#009688', '#ff5722'
+  ];
+
+  const labels = [
+    {% for row in report %}
+      "{{ row.category__name }}",
+    {% endfor %}
+  ];
+
+  const data = [
+    {% for row in report %}
+      {{ row.total }},
+    {% endfor %}
+  ];
+
+  const backgroundColors = labels.map((_, i) => barColors[i % barColors.length]);
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Total Expenses ($)',
+        data: data,
+        backgroundColor: backgroundColors,
+        borderRadius: 6,
+        borderSkipped: false,
+        borderColor: '#fff',
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      animation: {
+        duration: 1200,
+        easing: 'easeOutBounce'
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: '#fff',
+            font: {
+              weight: 'bold'
+            },
+            callback: function(value) {
+              return '$' + value.toFixed(2);
+            }
+          },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.2)'
+          }
+        },
+        x: {
+          ticks: {
+            color: '#fff',
+            font: {
+              weight: 'bold'
+            }
+          },
+          grid: {
+            display: false
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          backgroundColor: '#333',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          callbacks: {
+            label: function(context) {
+              return '$' + context.parsed.y.toFixed(2);
+            }
+          }
+        }
+      }
+    }
+  });
+</script>
 {% endblock %}

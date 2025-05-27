@@ -12,7 +12,8 @@ from xhtml2pdf import pisa
 from django.db.models import Sum
 from .models import Book, Category
 from .forms import UploadFileForm
-
+from django.views.generic import TemplateView
+from django.http import JsonResponse
 
 def import_data(request):
     if request.method == 'POST':
@@ -142,5 +143,14 @@ class BookDeleteView(DeleteView):
     template_name = 'book_confirm_delete.html'
     success_url = reverse_lazy('book_list')
 
-def home(request):
-    return HttpResponse('welcom')
+class HomePageView(TemplateView):
+    template_name = 'home.html'
+
+
+def home_chart_data(request):
+    data = Book.objects.values('category__name').annotate(total=Sum('distribution_expenses'))
+    chart_data = {
+        'labels': [item['category__name'] for item in data],
+        'data': [float(item['total']) for item in data]
+    }
+    return JsonResponse(chart_data)

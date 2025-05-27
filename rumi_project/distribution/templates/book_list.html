@@ -1,23 +1,39 @@
 {% extends 'base.html' %}
 {% block content %}
-<h3>Books</h3>
-<a href="{% url 'book_create' %}" class="btn btn-success mb-2">+ Add Book</a>
-<table class="table table-bordered">
-  <tr>
-    <th>Title</th><th>Author</th><th>Category</th><th>Date</th><th>Expenses</th><th>Actions</th>
-  </tr>
-  {% for book in object_list %}
-  <tr>
-    <td>{{ book.title }}</td>
-    <td>{{ book.author }}</td>
-    <td>{{ book.category }}</td>
-    <td>{{ book.publication_date }}</td>
-    <td>${{ book.distribution_expenses }}</td>
-    <td>
-      <a href="{% url 'book_update' book.pk %}" class="btn btn-sm btn-primary">Edit</a>
-      <a href="{% url 'book_delete' book.pk %}" class="btn btn-sm btn-danger">Delete</a>
-    </td>
-  </tr>
-  {% endfor %}
-</table>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">📚 Book List</h3>
+    <a href="{% url 'book_create' %}" class="btn btn-success">+ Add Book</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover table-striped table-bordered shadow-sm bg-white">
+        <thead class="table-dark">
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Category</th>
+                <th>Publication Date</th>
+                <th>Expenses ($)</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for book in object_list %}
+            <tr>
+                <td>{{ book.title }}</td>
+                <td>{{ book.author }}</td>
+                <td>{{ book.category }}</td>
+                <td>{{ book.publication_date }}</td>
+                <td>${{ book.distribution_expenses }}</td>
+                <td>
+                    <a href="{% url 'book_update' book.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <a href="{% url 'book_delete' book.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center text-muted">No books found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}
