@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Distribution Expenses by Category</h3>
+<table class="table table-striped">
+  <tr><th>Category</th><th>Total Expenses</th></tr>
+  {% for row in report %}
+  <tr>
+    <td>{{ row.category__name }}</td>
+    <td>${{ row.total }}</td>
+  </tr>
+  {% endfor %}
+</table>
+<a href="{% url 'report_csv' %}" class="btn btn-outline-primary">Download CSV</a>
+<a href="{% url 'report_pdf' %}" class="btn btn-outline-danger">Download PDF</a>
+{% endblock %}
